@@ -17,11 +17,19 @@ interface CoinListProps {
   selectedTimeframe: string;
 }
 
+interface Coin {
+  id: string;
+  name: string;
+  price: number;
+  // add other properties
+}
+
 export default function CoinList({ selectedTimeframe }: CoinListProps) {
   const [prices, setPrices] = useState<CoinPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [coins, setCoins] = useState<Coin[]>([]);
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -45,6 +53,21 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
     };
 
     fetchPrices();
+  }, []);
+
+  useEffect(() => {
+    // Fetch coins data
+    const fetchCoins = async () => {
+      try {
+        const response = await fetch('/api/coins');
+        const data = await response.json();
+        setCoins(data);
+      } catch (err) {
+        console.error('Failed to fetch coins:', err);
+      }
+    };
+    
+    fetchCoins();
   }, []);
 
   const getDefaultIcon = (coinId: string) => {

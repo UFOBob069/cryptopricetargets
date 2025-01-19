@@ -37,7 +37,7 @@ export default function CoinPage({ params }: PageProps) {
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
   const [price, setPrice] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [coinData, setCoinData] = useState<CoinData | null>(null);
+  const [data, setData] = useState<CoinData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +89,7 @@ export default function CoinPage({ params }: PageProps) {
         if (result.error) {
           setError(result.error);
         } else {
-          setCoinData(result.data);
+          setData(result.data);
         }
       } catch (err) {
         setError('Failed to fetch coin data');
@@ -110,7 +110,7 @@ export default function CoinPage({ params }: PageProps) {
     return <div>Error: {error}</div>;
   }
 
-  if (!coinData) {
+  if (!data) {
     return <div>No data found</div>;
   }
 
