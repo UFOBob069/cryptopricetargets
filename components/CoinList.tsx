@@ -22,7 +22,8 @@ interface Coin {
   id: string;
   name: string;
   price: number;
-  // add other properties
+  symbol: string;
+  image?: string;
 }
 
 export default function CoinList({ selectedTimeframe }: CoinListProps) {
@@ -30,7 +31,6 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
-  const [coins, setCoins] = useState<Coin[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -58,6 +58,8 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchCoins = async () => {
       try {
         const response = await fetch('/api/coins');
@@ -65,16 +67,26 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
           throw new Error('Failed to fetch coins');
         }
         const data = await response.json();
-        setCoins(data);
+        if (mounted) {
+          setCoins(data);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch coins');
-        console.error('Failed to fetch coins:', err);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch coins');
+          console.error('Failed to fetch coins:', err);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
     
     fetchCoins();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const getDefaultIcon = (coinId: string) => {
@@ -149,7 +161,7 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
     // Your click handler logic
   };
 
-  const navigateToCoin = (coin: Coin) => {
+  const handleCoinClick = (coin: CoinPrice) => {
     router.push(`/coins/${coin.id}`);
   };
 

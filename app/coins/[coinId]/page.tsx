@@ -40,7 +40,7 @@ export default function CoinPage({ params }: PageProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState('Q2 2025');
   const [expandedComments, setExpandedComments] = useState<{ [key: string]: boolean }>({});
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
-  const [price, setPrice] = useState<any>(null);
+  const [price, setPrice] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<CoinData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,11 +55,10 @@ export default function CoinPage({ params }: PageProps) {
     return null;
   }
 
-  useEffect(() => {
-    const fetchPrice = async () => {
-      setIsLoading(true);
-      const priceData = await getCoinPrices([coinId]);
-      setPrice(priceData?.[coinId] || null);
+  const fetchPrice = async () => {
+    setIsLoading(true);
+    const priceData = await getCoinPrices([coinId]);
+    setPrice(priceData?.[coinId] || null);
       setIsLoading(false);
     };
 
@@ -67,11 +66,10 @@ export default function CoinPage({ params }: PageProps) {
 
     // Refresh price every 30 seconds
     const interval = setInterval(fetchPrice, 30000);
-
     return () => clearInterval(interval);
-  }, [coinId]);
+  });
 
-  // Get predictions for this specific coin
+  // Get predictions for this specific coin 
   const coinPredictions = mockPredictions[coinId] || [];
 
   const toggleComments = (predictionId: string) => {
@@ -86,6 +84,8 @@ export default function CoinPage({ params }: PageProps) {
     .sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/coins/${coinId}`);
@@ -95,21 +95,30 @@ export default function CoinPage({ params }: PageProps) {
         }
         const result: ApiResponse = await response.json();
         
+        if (!mounted) return;
+        
         if (result.error) {
           setError(result.error);
         } else {
           setData(result.data);
         }
-      } catch (error: unknown) {
+      } catch (error) {
+        if (!mounted) return;
         const errorMessage = error instanceof Error ? error.message : 'Failed to fetch coin data';
         setError(errorMessage);
         console.error(error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, [coinId]);
 
   if (loading) {

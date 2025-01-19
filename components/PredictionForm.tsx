@@ -16,10 +16,9 @@ export default function PredictionForm({
 }: PredictionFormProps) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [targetPrice, setTargetPrice] = useState('');
-  const [timeframe, setTimeframe] = useState('Q2 2024');
-  const [analysis, setAnalysis] = useState('');
+  const [targetDate, setTargetDate] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +28,10 @@ export default function PredictionForm({
     }
 
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      const res = await fetch('/api/predictions', {
+      const response = await fetch('/api/predictions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,20 +39,20 @@ export default function PredictionForm({
         body: JSON.stringify({
           coinId,
           targetPrice: parseFloat(targetPrice),
-          timeframe,
-          analysis,
+          targetDate,
         }),
       });
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error('Failed to submit prediction');
       }
 
       setTargetPrice('');
-      setAnalysis('');
+      setTargetDate('');
       onSuccess?.();
-    } catch {
-      setError('Failed to submit prediction');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit prediction');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -68,6 +67,7 @@ export default function PredictionForm({
           Target Price (USD)
         </label>
         <input
+          id="targetPrice"
           type="number"
           step="0.01"
           required
@@ -79,31 +79,15 @@ export default function PredictionForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          Timeframe
+          Target Date
         </label>
-        <select
-          value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option>Q2 2024</option>
-          <option>Q3 2024</option>
-          <option>Q4 2024</option>
-          <option>Q1 2025</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Analysis
-        </label>
-        <textarea
+        <input
+          id="targetDate"
+          type="date"
           required
-          value={analysis}
-          onChange={(e) => setAnalysis(e.target.value)}
-          rows={4}
+          value={targetDate}
+          onChange={(e) => setTargetDate(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Share your reasoning..."
         />
       </div>
 

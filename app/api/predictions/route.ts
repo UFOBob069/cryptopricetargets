@@ -3,21 +3,28 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-export async function POST(req: Request) {
+interface PredictionData {
+  coinId: string;
+  targetPrice: number;
+  targetDate: string;
+  // add other properties
+}
+
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { coinId, targetPrice, timeframe, analysis } = await req.json();
+    const data: PredictionData = await request.json();
+    const { coinId, targetPrice, targetDate } = data;
 
     const prediction = await prisma.prediction.create({
       data: {
         coinId,
         targetPrice,
-        timeframe,
-        analysis,
+        targetDate,
         userId: session.user.id,
       },
     });
