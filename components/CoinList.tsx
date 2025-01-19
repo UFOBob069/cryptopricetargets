@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface CoinPrice {
   id: string;
@@ -30,6 +31,7 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
   const [error, setError] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [coins, setCoins] = useState<Coin[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -56,14 +58,19 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
   }, []);
 
   useEffect(() => {
-    // Fetch coins data
     const fetchCoins = async () => {
       try {
         const response = await fetch('/api/coins');
+        if (!response.ok) {
+          throw new Error('Failed to fetch coins');
+        }
         const data = await response.json();
         setCoins(data);
       } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch coins');
         console.error('Failed to fetch coins:', err);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -140,6 +147,10 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
 
   const handleCoinClick = (coin: CoinPrice) => {
     // Your click handler logic
+  };
+
+  const navigateToCoin = (coin: Coin) => {
+    router.push(`/coins/${coin.id}`);
   };
 
   if (loading) {

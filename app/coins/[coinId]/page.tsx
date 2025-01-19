@@ -27,6 +27,11 @@ interface ApiResponse {
   error?: string;
 }
 
+interface ApiError {
+  message: string;
+  status: number;
+}
+
 export default function CoinPage({ params }: PageProps) {
   const router = useRouter();
   const resolvedParams = React.use(params);
@@ -84,6 +89,10 @@ export default function CoinPage({ params }: PageProps) {
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/coins/${coinId}`);
+        if (!response.ok) {
+          const errorData: ApiError = await response.json();
+          throw new Error(errorData.message);
+        }
         const result: ApiResponse = await response.json();
         
         if (result.error) {
@@ -91,9 +100,10 @@ export default function CoinPage({ params }: PageProps) {
         } else {
           setData(result.data);
         }
-      } catch (err) {
-        setError('Failed to fetch coin data');
-        console.error(err);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch coin data';
+        setError(errorMessage);
+        console.error(error);
       } finally {
         setLoading(false);
       }
