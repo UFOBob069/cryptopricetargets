@@ -7,7 +7,8 @@ interface PredictionData {
   coinId: string;
   targetPrice: number;
   targetDate: string;
-  // add other properties
+  timeframe?: string;
+  analysis?: string;
 }
 
 export async function POST(request: Request) {
@@ -18,19 +19,21 @@ export async function POST(request: Request) {
     }
 
     const data: PredictionData = await request.json();
-    const { coinId, targetPrice, targetDate } = data;
+    const { coinId, targetPrice, targetDate, timeframe, analysis } = data;
 
     const prediction = await prisma.prediction.create({
       data: {
-        coinId,
+        coin: coinId,
         targetPrice,
         targetDate,
+        timeframe, // Include this if your schema has a 'timeframe' field
+        analysis,  // Include this if your schema has an 'analysis' field
         userId: session.user.id,
       },
     });
 
     return NextResponse.json(prediction);
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to create prediction' },
       { status: 500 }
@@ -46,7 +49,7 @@ export async function GET(req: Request) {
 
     const predictions = await prisma.prediction.findMany({
       where: {
-        coinId: coinId || undefined,
+        coin: coinId || undefined,
         timeframe: timeframe || undefined,
       },
       include: {
@@ -57,15 +60,9 @@ export async function GET(req: Request) {
           },
         },
         votes: true,
-        comments: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                image: true,
-              },
-            },
-            votes: true,
+        _count: {
+          select: {
+            comments: true,
           },
         },
       },
@@ -75,7 +72,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(predictions);
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch predictions' },
       { status: 500 }
@@ -92,20 +89,22 @@ export async function PUT(req: Request) {
 
     const { coinId, targetPrice, timeframe, analysis } = await req.json();
 
+    // Adjust this `where` clause to match how your primary key or unique identifiers are set up in Prisma
     const prediction = await prisma.prediction.update({
       where: {
-        userId: session.user.id,
-        coinId: coinId,
-        timeframe: timeframe,
+        id: `${session.user.id}-${coinId}-${timeframe}`,
       },
       data: {
-        targetPrice: targetPrice,
-        analysis: analysis,
+        targetPrice,
+        analysis,
       },
     });
 
     return NextResponse.json(prediction);
-  } catch {
-    return new Response('Error updating prediction', { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Error updating prediction' },
+      { status: 500 }
+    );
   }
-} 
+}

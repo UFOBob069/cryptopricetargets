@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
+import GithubProvider from 'next-auth/providers/github';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -54,15 +55,19 @@ export const authOptions = {
 
         return user;
       }
-    })
+    }),
+    GithubProvider({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+    }),
   ],
   session: {
     strategy: 'jwt'
   },
   pages: {
-    signIn: '/login',
+    signIn: '/signup',
   },
-} satisfies import("next-auth").NextAuthConfig;
+} satisfies AuthConfig;
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

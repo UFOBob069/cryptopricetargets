@@ -1,4 +1,3 @@
-// app/coins/[coinId]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,9 @@ import { getCoinPrices } from '@/utils/priceUtils';
 import { useRouter } from 'next/navigation';
 
 interface PageProps {
-  params: Promise<{ coinId: string }>;
+  params: {
+    coinId: string;
+  };
 }
 
 interface CoinData {
@@ -20,7 +21,8 @@ interface CoinData {
   name: string;
   price: number;
   symbol: string;
-  // add other properties
+  image?: string;
+  // add other properties as needed
 }
 
 interface ApiResponse {
@@ -35,9 +37,8 @@ interface ApiError {
 
 export default function CoinPage({ params }: PageProps) {
   const router = useRouter();
-  const resolvedParams = React.use(params);
-  const { coinId } = resolvedParams;
-  
+  const { coinId } = params;
+
   const [selectedTimeframe, setSelectedTimeframe] = useState('Q2 2025');
   const [expandedComments, setExpandedComments] = useState<{ [key: string]: boolean }>({});
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
@@ -49,30 +50,33 @@ export default function CoinPage({ params }: PageProps) {
 
   // Get coin data from our utility file
   const coin = coinData[coinId];
-  
+
   // If coin doesn't exist, redirect to home
   if (!coin) {
     router.push('/');
     return null;
   }
 
+  // -- Keep the fetchPrice function --
   const fetchPrice = async () => {
     setIsLoading(true);
     const priceData = await getCoinPrices([coinId]);
     setPrice(priceData?.[coinId] || null);
-      setIsLoading(false);
-    };
-
+    setIsLoading(false);
+  };
+  // Use an effect to call fetchPrice and refresh periodically
+  const fetchPriceEffect = useEffect(() => {
     fetchPrice();
 
     // Refresh price every 30 seconds
     const interval = setInterval(fetchPrice, 30000);
     return () => clearInterval(interval);
-  });
+  }, [coinId]);
 
   // Get predictions for this specific coin 
   const coinPredictions = mockPredictions[coinId] || [];
 
+  // -- Keep the toggleComments function --
   const toggleComments = (predictionId: string) => {
     setExpandedComments(prev => ({
       ...prev,
@@ -83,7 +87,7 @@ export default function CoinPage({ params }: PageProps) {
   const filteredPredictions = coinPredictions
     .filter(p => p.timeframe === selectedTimeframe)
     .sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
-
+  // Fetch additional data from your API route if needed
   useEffect(() => {
     let mounted = true;
 
@@ -91,8 +95,7 @@ export default function CoinPage({ params }: PageProps) {
       try {
         const response = await fetch(`/api/coins/${coinId}`);
         if (!response.ok) {
-          const errorData: ApiError = await response.json();
-          throw new Error(errorData.message);
+          throw new Error('Failed to fetch coin data');
         }
         const result: ApiResponse = await response.json();
         
@@ -105,8 +108,7 @@ export default function CoinPage({ params }: PageProps) {
         }
       } catch (error) {
         if (!mounted) return;
-        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch coin data';
-        setError(errorMessage);
+        setError('Failed to fetch coin data');
         console.error(error);
       } finally {
         if (mounted) {
@@ -116,8 +118,6 @@ export default function CoinPage({ params }: PageProps) {
     };
 
     fetchData();
-
-    // Set up price refresh interval
     const priceInterval = setInterval(fetchData, 30000);
 
     return () => {
@@ -127,43 +127,47 @@ export default function CoinPage({ params }: PageProps) {
   }, [coinId]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="p-4 text-red-500">Error: {error}</div>;
   }
 
   if (!data) {
-    return <div>No data found</div>;
+    return <div className="p-4">No data found</div>;
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Coin Header */}
       <div className="flex items-center gap-4 mb-8">
-        <Image
-          src={coin.icon}
-          alt={coin.name}
-          width={64}
-          height={64}
-          className="rounded-full"
-        />
+        {data.image && (
+          <img src={data.image} alt={data.name} className="w-12 h-12" />
+        )}
         <div>
-          <h1 className="text-3xl font-bold">{coin.name}</h1>
+          <h1 className="text-3xl font-bold">{data.name}</h1>
           <div className="flex items-center gap-4 text-gray-600">
-            <span>{coin.symbol}</span>
+            <span>{data.symbol}</span>
             {isLoading ? (
               <span className="animate-pulse">Loading...</span>
             ) : (
-              <span>${(price?.usd || 0).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}</span>
+              <span>
+                $
+                {(typeof price === 'number' ? price : 0).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             )}
-            {!isLoading && price?.usd_24h_change && (
-              <span className={price.usd_24h_change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {price.usd_24h_change >= 0 ? '+' : ''}{price.usd_24h_change.toFixed(2)}%
+            {!isLoading && typeof price?.usd_24h_change === 'number' && (
+              <span
+                className={
+                  price.usd_24h_change >= 0 ? 'text-green-600' : 'text-red-600'
+                }
+              >
+                {price.usd_24h_change >= 0 ? '+' : ''}
+                {price.usd_24h_change.toFixed(2)}%
               </span>
             )}
           </div>
@@ -182,13 +186,13 @@ export default function CoinPage({ params }: PageProps) {
       {/* Predictions */}
       <h2 className="text-xl font-bold mb-4">
         Predictions for {selectedTimeframe}
-        {filteredPredictions.length === 0 && " - No predictions yet"}
+        {filteredPredictions.length === 0 && ' - No predictions yet'}
       </h2>
       <div className="space-y-6">
         {filteredPredictions.map(prediction => (
           <div key={prediction.id} className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-start mb-4">
-              <Link 
+              <Link
                 href={`/users/${prediction.analyst.id.toLowerCase()}`}
                 className="flex items-center gap-4 group"
               >
@@ -218,7 +222,12 @@ export default function CoinPage({ params }: PageProps) {
                 ${prediction.targetPrice.toLocaleString()}
                 {!isLoading && price?.usd && (
                   <span className="text-sm text-gray-500 ml-2">
-                    ({((prediction.targetPrice - price.usd) / price.usd * 100).toFixed(1)}% from current)
+                    (
+                    {(
+                      ((prediction.targetPrice - price.usd) / price.usd) *
+                      100
+                    ).toFixed(1)}
+                    % from current)
                   </span>
                 )}
               </div>
@@ -236,7 +245,7 @@ export default function CoinPage({ params }: PageProps) {
                   <span>{prediction.downvotes}</span>
                 </button>
               </div>
-              <button 
+              <button
                 onClick={() => toggleComments(prediction.id)}
                 className="flex items-center gap-1 text-gray-600 hover:text-blue-600"
               >
@@ -258,15 +267,17 @@ export default function CoinPage({ params }: PageProps) {
                     <p className="mt-1 text-gray-700">{comment.text}</p>
                   </div>
                 ))}
-                
+
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newComments[prediction.id] || ''}
-                    onChange={(e) => setNewComments(prev => ({
-                      ...prev,
-                      [prediction.id]: e.target.value
-                    }))}
+                    onChange={e =>
+                      setNewComments(prev => ({
+                        ...prev,
+                        [prediction.id]: e.target.value,
+                      }))
+                    }
                     placeholder="Add a comment..."
                     className="flex-1 p-2 border rounded"
                   />
@@ -287,4 +298,4 @@ export default function CoinPage({ params }: PageProps) {
       </div>
     </div>
   );
-}
+};
