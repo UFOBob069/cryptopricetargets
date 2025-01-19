@@ -3,33 +3,24 @@ import { NextResponse } from 'next/server';
 interface CoinGeckoResponse {
   [key: string]: {
     usd: number;
-    // add other properties if needed
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false'
-    );
+    const { searchParams } = new URL(request.url);
+    const coinId = searchParams.get('coinId');
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch from CoinGecko');
+    if (!coinId) {
+      return new Response('Missing coinId parameter', { status: 400 });
     }
 
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`;
+    const response = await fetch(url);
     const data: CoinGeckoResponse = await response.json();
-    return NextResponse.json(data.map((coin: any) => ({
-      id: coin.id,
-      symbol: coin.symbol,
-      name: coin.name,
-      current_price: coin.current_price,
-      market_cap_rank: coin.market_cap_rank,
-    })));
-  } catch (error) {
-    console.error('Price fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch prices' },
-      { status: 500 }
-    );
+    
+    return Response.json(data);
+  } catch {
+    return new Response('Failed to fetch price', { status: 500 });
   }
 } 

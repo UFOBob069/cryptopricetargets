@@ -32,6 +32,7 @@ export default function CoinPage({ params }: PageProps) {
   const [price, setPrice] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [coinData, setCoinData] = useState<CoinData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Get coin data from our utility file
   const coin = coinData[coinId];
@@ -80,10 +81,16 @@ export default function CoinPage({ params }: PageProps) {
         setCoinData(data);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, [coinId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
