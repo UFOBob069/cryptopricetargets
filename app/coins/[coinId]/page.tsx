@@ -18,7 +18,8 @@ interface PageProps {
 interface CoinData {
   id: string;
   name: string;
-  // add other properties you need
+  price: number;
+  // add other properties
 }
 
 export default function CoinPage({ params }: PageProps) {
@@ -90,6 +91,10 @@ export default function CoinPage({ params }: PageProps) {
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (!coinData) {
+    return <div>No data found</div>;
   }
 
   return (
