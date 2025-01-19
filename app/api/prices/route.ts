@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
-interface CoinPriceData {
+interface CoinGeckoResponse {
   [key: string]: {
     usd: number;
+    // add other properties if needed
   }
 }
 
@@ -16,7 +17,7 @@ export async function GET() {
       throw new Error('Failed to fetch from CoinGecko');
     }
 
-    const data: CoinPriceData = await response.json();
+    const data: CoinGeckoResponse = await response.json();
     return NextResponse.json(data.map((coin: any) => ({
       id: coin.id,
       symbol: coin.symbol,

@@ -72,6 +72,19 @@ export default function CoinPage({ params }: PageProps) {
     .filter(p => p.timeframe === selectedTimeframe)
     .sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`/api/coins/${coinId}`);
+        const data: CoinData = await response.json();
+        setCoinData(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, [coinId]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Coin Header */}

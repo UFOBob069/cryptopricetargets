@@ -6,14 +6,12 @@ import { useSession } from 'next-auth/react';
 interface PredictionFormProps {
   coinId: string;
   coinName: string;
-  currentPrice: number;
   onSuccess?: () => void;
 }
 
 export default function PredictionForm({ 
   coinId, 
   coinName, 
-  currentPrice,
   onSuccess 
 }: PredictionFormProps) {
   const { data: session } = useSession();
