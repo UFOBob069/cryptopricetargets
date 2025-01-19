@@ -15,6 +15,12 @@ interface PageProps {
   params: Promise<{ coinId: string }>;
 }
 
+interface CoinData {
+  id: string;
+  name: string;
+  // add other properties you need
+}
+
 export default function CoinPage({ params }: PageProps) {
   const router = useRouter();
   const resolvedParams = React.use(params);

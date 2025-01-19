@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(prediction);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to create prediction' },
       { status: 500 }

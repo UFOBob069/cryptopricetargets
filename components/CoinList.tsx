@@ -4,8 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { coinData, mockPredictions } from '@/utils/coinData';
-import { getCoinPrices } from '@/utils/priceUtils';
 
 interface CoinPrice {
   id: string;

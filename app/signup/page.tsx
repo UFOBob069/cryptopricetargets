@@ -19,8 +19,8 @@ export default function Signup() {
     try {
       // TODO: Implement email signup logic
       console.log('Email signup:', { email, password, name });
-    } catch (err) {
-      setError('Failed to create account. Please try again.');
+    } catch {
+      setError('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ export default function Signup() {
     try {
       // TODO: Implement Google signup logic
       console.log('Google signup initiated');
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with Google. Please try again.');
     } finally {
       setLoading(false);

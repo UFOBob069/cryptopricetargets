@@ -40,7 +40,7 @@ export default function LearnMore() {
             <div className="text-4xl mb-4">💡</div>
             <h3 className="text-xl font-semibold mb-4">Share Insights</h3>
             <p className="text-gray-600">
-              Add detailed analysis to your predictions. Help others understand your reasoning and contribute to the community's collective knowledge.
+              Add detailed analysis to your predictions. Help others understand your reasoning and contribute to the community&apos;s collective knowledge.
             </p>
           </div>
         </div>

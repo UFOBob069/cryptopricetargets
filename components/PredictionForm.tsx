@@ -54,8 +54,8 @@ export default function PredictionForm({
       setTargetPrice('');
       setAnalysis('');
       onSuccess?.();
-    } catch (err) {
-      setError('Failed to submit prediction. Please try again.');
+    } catch {
+      setError('Failed to submit prediction');
     } finally {
       setLoading(false);
     }

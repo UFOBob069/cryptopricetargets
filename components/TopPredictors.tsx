@@ -3,19 +3,6 @@
 
 import React from 'react';
 
-interface Prediction {
-  id: string;
-  coin: string;
-  targetPrice: number;
-  timeframe: string;
-  analysis: string;
-  votes: number;
-  user: {
-    name: string;
-    accuracy: number;
-  };
-}
-
 export default function TopPredictors() {
   // Mock data - will be replaced with API calls
   const predictors: Predictor[] = [
