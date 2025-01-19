@@ -31,6 +31,7 @@ export default function CoinPage({ params }: PageProps) {
   const [newComments, setNewComments] = useState<{ [key: string]: string }>({});
   const [price, setPrice] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [coinData, setCoinData] = useState<CoinData | null>(null);
 
   // Get coin data from our utility file
   const coin = coinData[coinId];

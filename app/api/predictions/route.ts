@@ -68,10 +68,37 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(predictions);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch predictions' },
       { status: 500 }
     );
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { coinId, targetPrice, timeframe, analysis } = await req.json();
+
+    const prediction = await prisma.prediction.update({
+      where: {
+        userId: session.user.id,
+        coinId: coinId,
+        timeframe: timeframe,
+      },
+      data: {
+        targetPrice: targetPrice,
+        analysis: analysis,
+      },
+    });
+
+    return NextResponse.json(prediction);
+  } catch {
+    return new Response('Error updating prediction', { status: 500 });
   }
 } 
