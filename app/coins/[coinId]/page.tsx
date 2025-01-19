@@ -22,6 +22,11 @@ interface CoinData {
   // add other properties
 }
 
+interface ApiResponse {
+  data: CoinData;
+  error?: string;
+}
+
 export default function CoinPage({ params }: PageProps) {
   const router = useRouter();
   const resolvedParams = React.use(params);
@@ -34,6 +39,7 @@ export default function CoinPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [coinData, setCoinData] = useState<CoinData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Get coin data from our utility file
   const coin = coinData[coinId];
@@ -78,19 +84,30 @@ export default function CoinPage({ params }: PageProps) {
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/coins/${coinId}`);
-        const data: CoinData = await response.json();
-        setCoinData(data);
+        const result: ApiResponse = await response.json();
+        
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setCoinData(result.data);
+        }
       } catch (err) {
+        setError('Failed to fetch coin data');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [coinId]);
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   if (!coinData) {

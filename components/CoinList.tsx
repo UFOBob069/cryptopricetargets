@@ -115,6 +115,10 @@ export default function CoinList({ selectedTimeframe }: CoinListProps) {
     setFailedImages(prev => new Set(prev).add(coinId));
   };
 
+  const handleCoinClick = (coin: CoinPrice) => {
+    // Your click handler logic
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">
