@@ -19,6 +19,7 @@ interface CoinData {
   id: string;
   name: string;
   price: number;
+  symbol: string;
   // add other properties
 }
 
@@ -116,8 +117,12 @@ export default function CoinPage({ params }: PageProps) {
 
     fetchData();
 
+    // Set up price refresh interval
+    const priceInterval = setInterval(fetchData, 30000);
+
     return () => {
       mounted = false;
+      clearInterval(priceInterval);
     };
   }, [coinId]);
 
